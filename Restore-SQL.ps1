@@ -12,7 +12,6 @@ try {
         Invoke-Sqlcmd -ServerInstance $server -Query "DROP DATABASE $db"
         Write-Host "Database '$db' deleted."
     } 
-    
     else {
         Write-Host "Database '$db' does not exist."
     }
@@ -26,15 +25,13 @@ catch {
 
 # Create table Client_A_Contacts
 try {
-    $createTable = @"
-CREATE TABLE dbo.Client_A_Contacts (
+    $createTable = CREATE TABLE dbo.Client_A_Contacts (
     FirstName NVARCHAR(50),
     LastName NVARCHAR(50),
     Email NVARCHAR(100),
     Phone NVARCHAR(20),
     Company NVARCHAR(100)
 )
-"@
     Invoke-Sqlcmd -ServerInstance $server -Database $db -Query $createTable
     Write-Host "Table 'Client_A_Contacts' created."
 } 
@@ -64,5 +61,3 @@ try {
 catch {
     Write-Host "Error exporting results: $($_.Exception.Message)"
 }
-
-
