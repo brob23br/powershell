@@ -63,3 +63,4 @@ try {
 catch {
     Write-Host "Error exporting results: $($_.Exception.Message)"
 }
+Invoke-Sqlcmd -Database ClientDB –ServerInstance .\SQLEXPRESS -Query ‘SELECT * FROM dbo.Client_A_Contacts’ > .\SqlResults.txt
