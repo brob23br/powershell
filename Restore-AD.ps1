@@ -14,10 +14,16 @@ catch {
 $ouPath = "OU=Finance,DC=consultingfirm,DC=com"
 $domainPath = "DC=consultingfirm,DC=com"
 
-# Check for OU, delete if it exists, and create it
+# Check for OU, remove protection, delete if it exists, and create it
 try {
+    # Check if the Finance OU exists
     Get-ADOrganizationalUnit -Identity $ouPath -ErrorAction Stop
-    Write-Host "OU 'Finance' already exists. Deleting it now..."
+    Write-Host "OU 'Finance' already exists. Removing protection and deleting..."
+
+    # Remove accidental deletion protection
+    Set-ADOrganizationalUnit -Identity $ouPath -ProtectedFromAccidentalDeletion $false
+
+    # Delete the OU
     Remove-ADOrganizationalUnit -Identity $ouPath -Recursive -Confirm:$false
     Write-Host "OU 'Finance' deleted successfully."
 } 
@@ -26,8 +32,10 @@ catch {
 }
 
 try {
+    # Create the Finance OU
     New-ADOrganizationalUnit -Name "Finance" -Path $domainPath
     Write-Host "OU 'Finance' created successfully."
+    
 } 
 catch {
     Write-Host "Error creating OU: $($_.Exception.Message)"
