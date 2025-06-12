@@ -64,4 +64,4 @@ try {
 catch {
     Write-Host "Error exporting user data: $($_.Exception.Message)"
 }
-Get-ADUser -Filter * -SearchBase “ou=Finance,dc=consultingfirm,dc=com” -Properties DisplayName,PostalCode,OfficePhone,MobilePhone > .\AdResults.txt
+Get-ADUser -Filter * -SearchBase “ou=Finance,dc=consultingfirm,dc=com” -Properties DisplayName,PostalCode,OfficePhone,MobilePhone > $PSScriptRoot\AdResults.txt
