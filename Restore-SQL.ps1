@@ -1,66 +1,75 @@
-# Name: Brandon Robinson | Student ID: 001260410 | Class: D411 Scripting and Automation
+# Name: Brandon Robinson | Student ID: 001260410
+
+# Define SQL Server Instance name, database name, and CSV path
 
 $sqlServerName = "SRV19-PRIMARY\SQLEXPRESS"
 $db = "ClientDB"
-$csvPath = "$PSScriptRoot\Requirements2\NewClientData.csv"
+$csvPath = "$PSScriptRoot\NewClientData.csv"
 
-# Check if ClientDB exists, delete if it does, then create new
-try {
+# Check if ClientDB exists, delete if it does, then create new DB
+
+try{
     $dbExists = Invoke-Sqlcmd -ServerInstance $sqlServerName -Query "IF DB_ID('$db') IS NOT NULL SELECT 1 ELSE SELECT 0"
-    if ($dbExists -eq 1) {
-        Write-Host "Database '$db' exists. Deleting..."
+    if ($dbExists -eq 1){
+        Write-Host "Database $db exists. Deleting now"
         Invoke-Sqlcmd -ServerInstance $sqlServerName -Query "DROP DATABASE $db"
-        Write-Host "Database '$db' deleted."
-    } 
-    else {
-        Write-Host "Database '$db' does not exist."
+        Write-Host "Database $db deleted."
+    }
+    else{
+        Write-Host "Database $db does not exist"
     }
 
     Invoke-Sqlcmd -ServerInstance $sqlServerName -Query "CREATE DATABASE $db"
-    Write-Host "Database '$db' created."
-} 
+    Write-Host "Database $db created."
+}
 catch {
     Write-Host "Error managing database: $($_.Exception.Message)"
 }
 
-# Create table Client_A_Contacts
-try {
+# Create table Client_A_Contact with column names from NewClientData.csv
+
+try{
     $createTable = @"
-CREATE TABLE dbo.Client_A_Contacts (
-    FirstName NVARCHAR(50),
-    LastName NVARCHAR(50),
-    Email NVARCHAR(100),
-    Phone NVARCHAR(20),
-    Company NVARCHAR(100)
-)
+    CREATE TABLE dbo.Client_A_Contacts(
+        FirstName VARCHAR(50),
+        LastName VARCHAR(50),
+        City VARCHAR(50),
+        County VARCHAR(50),
+        ZIP VARCHAR(10),
+        OfficePhone VARCHAR(20),
+        MobilePhone VARCHAR(20)
+    )
 "@
     Invoke-Sqlcmd -ServerInstance $sqlServerName -Database $db -Query $createTable
-    Write-Host "Table 'Client_A_Contacts' created."
-} 
-catch {
+    Write-Host "Client_A_Contacts table has been created."
+}
+catch{
     Write-Host "Error creating table: $($_.Exception.Message)"
 }
 
-# Import data from NewClientData.csv
-try {
+# Import data from NewClientData.csv into table
+
+try{
     $data = Import-Csv $csvPath
-    foreach ($row in $data) {
-        $insertQuery = "INSERT INTO dbo.Client_A_Contacts (FirstName, LastName, Email, Phone, Company)
-                        VALUES ('$($row.FirstName)', '$($row.LastName)', '$($row.Email)', '$($row.Phone)', '$($row.Company)')"
-        Invoke-Sqlcmd -ServerInstance $sqlServerName -Database $db -Query $insertQuery
+    foreach ($row in $data){
+        $insertQuery = @"
+            INSERT INTO dbo.Client_A_Contacts (FirstName, LastName, City, County, ZIP, OfficePhone, MobilePhone)
+            VALUES ('$($row.first_name)', '$($row.last_name)', '$($row.city)', '$($row.county)', '$($row.zip)', 
+                        '$($row.officePhone)', '$($row.mobilePhone)')
+"@
+    Invoke-Sqlcmd -ServerInstance $sqlServerName -Database $db -Query $insertQuery
     }
-    Write-Host "CSV data imported into Client_A_Contacts."
-} 
-catch {
+    Write-Host "NewClientData.csv data has been imported into Client_A_Contacts table."
+}
+catch{
     Write-Host "Error importing data: $($_.Exception.Message)"
 }
 
-# Export results to SqlResults.txt
-try {
-    Invoke-Sqlcmd -Database $db -ServerInstance $sqlServerName -Query "SELECT * FROM dbo.Client_A_Contacts" > "$PSScriptRoot\SqlResults.txt"
-    Write-Host "Results exported to SqlResults.txt."
-} 
-catch {
+# Export query results to SqlResults.txt
+try{
+    Invoke-Sqlcmd -Database ClientDB -ServerInstance .\SQLEXPRESS -Query "SELECT * FROM dbo.Client_A_Contacts" > $PSScriptRoot\SqlResults.txt
+    Write-Host "Results exported to SqlResults.txt"
+}
+catch{
     Write-Host "Error exporting results: $($_.Exception.Message)"
 }
-Invoke-Sqlcmd -Database ClientDB –ServerInstance .\SQLEXPRESS -Query ‘SELECT * FROM dbo.Client_A_Contacts’ > .\SqlResults.txt
