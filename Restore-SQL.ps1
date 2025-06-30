@@ -7,20 +7,15 @@ $db = "ClientDB"
 $csvPath = "$PSScriptRoot\NewClientData.csv"
 
 # Check if ClientDB exists, delete if it does, then create new DB
+try {
+    $query = @"
+    DROP DATABASE IF EXISTS [$db];
+    CREATE DATABASE [$db];
+"@
 
-try{
-    $dbExists = Invoke-Sqlcmd -ServerInstance $sqlServerName -Query "IF DB_ID('$db') IS NOT NULL SELECT 1 ELSE SELECT 0"
-    if ($dbExists -eq 1){
-        Write-Host "Database $db exists. Deleting now"
-        Invoke-Sqlcmd -ServerInstance $sqlServerName -Query "DROP DATABASE $db"
-        Write-Host "Database $db deleted."
-    }
-    else{
-        Write-Host "Database $db does not exist"
-    }
+    Invoke-Sqlcmd -ServerInstance $sqlServerName -Query $query
+    Write-Host "Database $db was dropped and created successfully."
 
-    Invoke-Sqlcmd -ServerInstance $sqlServerName -Query "CREATE DATABASE $db"
-    Write-Host "Database $db created."
 }
 catch {
     Write-Host "Error managing database: $($_.Exception.Message)"
