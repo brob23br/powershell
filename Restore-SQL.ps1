@@ -7,15 +7,21 @@ $db = "ClientDB"
 $csvPath = "$PSScriptRoot\NewClientData.csv"
 
 # Check if ClientDB exists, delete if it does, then create new DB
-try {
-    $query = @"
-    DROP DATABASE IF EXISTS [$db];
-    CREATE DATABASE [$db];
-"@
 
-    Invoke-Sqlcmd -ServerInstance $sqlServerName -Query $query
-    Write-Host "Database $db was dropped and created successfully."
-
+try{
+    $dbCheck = Invoke-Sqlcmd -ServerInstance $sqlServerName -Query "IF DB_ID('$db') IS NOT NULL SELECT 1 AS [Exists] ELSE SELECT 0 AS [Exists]"
+    
+    if ($dbCheck.Exists -eq 1){
+        Write-Host "$db exists and will be deleted."
+        Invoke-Sqlcmd -ServerInstance $sqlServerName -Query "DROP DATABASE [$db]" -ErrorAction SilentlyContinue
+        Write-Host "$db has been deleted."
+        Start-Sleep -Seconds 3
+    }
+    else{
+        Write-Host "$db does not exist"
+    }   
+    Invoke-Sqlcmd -ServerInstance $sqlServerName -Query "CREATE DATABASE [$db]" -ErrorAction SilentlyContinue
+    Write-Host "$db has been created."
 }
 catch {
     Write-Host "Error managing database: $($_.Exception.Message)"
@@ -35,7 +41,7 @@ try{
         MobilePhone VARCHAR(20)
     )
 "@
-    Invoke-Sqlcmd -ServerInstance $sqlServerName -Database $db -Query $createTable
+    Invoke-Sqlcmd -ServerInstance $sqlServerName -Database $db -Query $createTable -ErrorAction SilentlyContinue
     Write-Host "Client_A_Contacts table has been created."
 }
 catch{
